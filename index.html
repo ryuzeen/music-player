@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Player Offline</title>
+    <title>Video & Music Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700;900&display=swap');
@@ -90,8 +90,8 @@
         <div class="z-10 flex flex-col items-center justify-center text-center max-w-2xl w-full p-4">
             <div class="animated-gradient p-[3px] shadow-2xl neon-border-wrapper">
                 <div class="bg-black/25 backdrop-blur-md p-8 md:p-10 w-full">
-                    <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Music Player</h1>
-                    <p class="text-lg md:text-xl font-light mb-8">Sua experiência musical offline a partir de vídeos do YouTube.</p>
+                    <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Video & Music Player</h1>
+                    <p class="text-lg md:text-xl font-light mb-8">Sua experiência offline a partir de vídeos do YouTube.</p>
                     <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/30 mb-4 w-full">
                         <div class="flex items-center justify-center md:justify-start space-x-4">
                             <img src="https://avatars3.githubusercontent.com/u/8361145?s=200&v=4" alt="Ícone do AdGuard" class="w-16 h-16 rounded-lg">
@@ -114,7 +114,7 @@
     <div id="adguard-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden opacity-0 transition-opacity duration-300">
         <div class="bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 text-center max-w-sm shadow-lg border border-white/20">
             <h3 class="text-xl font-bold mb-4">Você instalou o AdGuard?</h3>
-            <p class="text-gray-300 mb-6">Se pular esta etapa, sua experiência musical poderá ser interrompida por propagandas.</p>
+            <p class="text-gray-300 mb-6">Se pular esta etapa, sua experiência poderá ser interrompida por propagandas.</p>
             <div class="flex flex-col gap-3">
                 <button id="confirm-install-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full w-full">Sim, instalei e quero continuar!</button>
                 <button id="skip-button" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Pular mesmo assim</button>
@@ -122,10 +122,10 @@
         </div>
     </div>
 
-    <!-- Player de Música -->
+    <!-- Player de Vídeo e Música -->
     <div id="player-page" class="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 p-4 transition-opacity duration-1000 opacity-0 hidden">
         <div class="w-full max-w-6xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-6">Music Player</h2>
+            <h2 class="text-3xl font-bold text-center mb-6">Video & Music Player</h2>
             <div class="flex flex-col sm:flex-row gap-2 mb-6">
                 <input type="text" id="youtube-link" placeholder="Cole o link do vídeo do YouTube aqui" class="flex-grow bg-gray-800 border-2 border-gray-700 focus:border-purple-500 focus:ring-purple-500 rounded-lg p-3 text-white transition">
                 <button id="add-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
@@ -211,6 +211,15 @@
         }
 
         function onPlayerStateChange(event) {
+            // Quando o vídeo começa a tocar, pega o título
+            if (event.data == YT.PlayerState.PLAYING) {
+                if (currentVideoIndex > -1 && playlist[currentVideoIndex]) {
+                    const videoData = player.getVideoData();
+                    playlist[currentVideoIndex].title = videoData.title;
+                    renderPlaylist(); // Re-renderiza para mostrar o título
+                }
+            }
+            // Quando o vídeo termina, toca o próximo
             if (event.data == YT.PlayerState.ENDED) {
                 playNext();
             }
@@ -233,13 +242,15 @@
                 li.dataset.index = index;
                 
                 const videoTitle = document.createElement('span');
-                videoTitle.textContent = `Música ${index + 1}: ${video.id}`;
-                videoTitle.className = 'truncate';
+                // Usa o título se já tiver, senão usa um placeholder
+                const titleText = video.title ? video.title : `Carregando título...`;
+                videoTitle.textContent = `Vídeo ${index + 1}: ${titleText}`;
+                videoTitle.className = 'truncate pr-2'; // Adiciona truncate para cortar texto longo
                 li.appendChild(videoTitle);
 
                 const removeBtn = document.createElement('button');
                 removeBtn.textContent = '✕';
-                removeBtn.className = 'ml-2 text-gray-400 hover:text-white';
+                removeBtn.className = 'ml-2 text-gray-400 hover:text-white flex-shrink-0';
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
                     removeSong(index);
@@ -260,13 +271,17 @@
         }
 
         function playNext() {
-            const nextIndex = (currentVideoIndex + 1) % playlist.length;
-            playSong(nextIndex);
+            if (playlist.length > 0) {
+                const nextIndex = (currentVideoIndex + 1) % playlist.length;
+                playSong(nextIndex);
+            }
         }
 
         function playPrev() {
-            const prevIndex = (currentVideoIndex - 1 + playlist.length) % playlist.length;
-            playSong(prevIndex);
+            if (playlist.length > 0) {
+                const prevIndex = (currentVideoIndex - 1 + playlist.length) % playlist.length;
+                playSong(prevIndex);
+            }
         }
         
         function removeSong(index) {
@@ -274,13 +289,12 @@
             if (playlist.length === 0) {
                 currentVideoIndex = -1;
                 player.stopVideo();
-                player.clearVideo();
+                // Limpa o player, mas não o destrói
+                player.loadVideoById('');
             } else if (index === currentVideoIndex) {
-                // Se removeu a música atual, toca a próxima (ou a anterior se era a última)
                 currentVideoIndex = index % playlist.length;
                 playSong(currentVideoIndex);
             } else if (index < currentVideoIndex) {
-                // Ajusta o índice se removeu uma música antes da atual
                 currentVideoIndex--;
             }
             renderPlaylist();
@@ -290,7 +304,8 @@
             const videoId = getYouTubeVideoId(youtubeLinkInput.value);
             if (videoId) {
                 errorMessage.classList.add('hidden');
-                playlist.push({ id: videoId });
+                // Adiciona com um título provisório
+                playlist.push({ id: videoId, title: null });
                 youtubeLinkInput.value = '';
                 renderPlaylist();
                 if (currentVideoIndex === -1) {
