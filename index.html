@@ -328,11 +328,32 @@
         // --- Lógica de Compartilhamento ---
         sharePlaylistButton.addEventListener('click', () => {
             if (playlist.length === 0) {
-                alert("Sua playlist está vazia. Adicione vídeos para compartilhar.");
+                // Usando um modal customizado em vez de alert()
+                const shareModalContent = shareModal.querySelector('div');
+                shareModalContent.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4">Playlist Vazia</h3>
+                    <p class="text-gray-300 mb-6">Adicione vídeos à sua playlist antes de compartilhar.</p>
+                    <button id="close-empty-share-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Fechar</button>
+                `;
+                document.getElementById('close-empty-share-modal').onclick = () => {
+                    closeModal(shareModal);
+                    // Recarrega o conteúdo original do modal
+                    shareModalContent.innerHTML = `
+                        <h3 class="text-xl font-bold mb-4">Compartilhar Playlist</h3>
+                        <p class="text-gray-300 mb-4">Copie o código abaixo e envie para um amigo.</p>
+                        <textarea id="share-code" readonly class="w-full bg-gray-900 p-2 rounded-md h-24 resize-none text-sm"></textarea>
+                        <div class="flex gap-3 mt-4">
+                            <button id="copy-code-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full w-full">Copiar Código</button>
+                            <button id="close-share-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Fechar</button>
+                        </div>
+                    `;
+                };
+                showModal(shareModal);
                 return;
             }
             const jsonString = JSON.stringify(playlist);
-            const base64Code = btoa(jsonString); // Converte para Base64
+            // Corrige o erro de codificação com caracteres especiais (UTF-8)
+            const base64Code = btoa(unescape(encodeURIComponent(jsonString)));
             shareCodeText.value = base64Code;
             showModal(shareModal);
         });
@@ -349,7 +370,8 @@
             if (!code) return;
 
             try {
-                const jsonString = atob(code); // Decodifica de Base64
+                // Corrige o erro de decodificação com caracteres especiais (UTF-8)
+                const jsonString = decodeURIComponent(escape(atob(code)));
                 const newPlaylist = JSON.parse(jsonString);
                 
                 if (Array.isArray(newPlaylist)) {
@@ -365,7 +387,27 @@
                 }
             } catch (error) {
                 console.error("Erro ao carregar playlist:", error);
-                alert("O código da playlist é inválido ou está corrompido.");
+                // Usando um modal customizado em vez de alert()
+                const shareModalContent = shareModal.querySelector('div');
+                shareModalContent.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4 text-red-400">Erro ao Carregar</h3>
+                    <p class="text-gray-300 mb-6">O código da playlist é inválido ou está corrompido.</p>
+                    <button id="close-error-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Fechar</button>
+                `;
+                 document.getElementById('close-error-modal').onclick = () => {
+                    closeModal(shareModal);
+                    // Recarrega o conteúdo original do modal
+                    shareModalContent.innerHTML = `
+                        <h3 class="text-xl font-bold mb-4">Compartilhar Playlist</h3>
+                        <p class="text-gray-300 mb-4">Copie o código abaixo e envie para um amigo.</p>
+                        <textarea id="share-code" readonly class="w-full bg-gray-900 p-2 rounded-md h-24 resize-none text-sm"></textarea>
+                        <div class="flex gap-3 mt-4">
+                            <button id="copy-code-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full w-full">Copiar Código</button>
+                            <button id="close-share-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Fechar</button>
+                        </div>
+                    `;
+                };
+                showModal(shareModal);
             }
         });
 
