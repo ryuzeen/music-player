@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player Offline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700;900&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Animação do fundo gradiente */
+        .animated-gradient {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Efeito de texto com gradiente animado e sombra para contraste */
+        .animated-text {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient 15s ease infinite;
+            /* Adicionado para dar contraste com o fundo */
+            text-shadow: 0px 2px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Efeito de vidro fosco */
+        .backdrop-blur-md {
+             backdrop-filter: blur(12px);
+             -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Animação das bolhas no fundo */
+        .bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -150px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: floatUp 25s infinite linear;
+        }
+        .bubble:nth-child(1) { left: 10%; animation-duration: 20s; }
+        .bubble:nth-child(2) { left: 20%; animation-duration: 15s; animation-delay: 2s; width: 20px; height: 20px; }
+        .bubble:nth-child(3) { left: 25%; animation-duration: 30s; animation-delay: 4s; }
+        .bubble:nth-child(4) { left: 40%; animation-duration: 22s; width: 60px; height: 60px; }
+        .bubble:nth-child(5) { left: 70%; animation-duration: 18s; animation-delay: 1s; }
+        .bubble:nth-child(6) { left: 80%; animation-duration: 28s; animation-delay: 3s; width: 30px; height: 30px; }
+        .bubble:nth-child(7) { left: 90%; animation-duration: 17s; }
+        .bubble:nth-child(8) { left: 55%; animation-duration: 23s; animation-delay: 5s; width: 25px; height: 25px; }
+        .bubble:nth-child(9) { left: 35%; animation-duration: 19s; }
+        .bubble:nth-child(10) { left: 50%; animation-duration: 26s; animation-delay: 2s; width: 50px; height: 50px; }
+
+        @keyframes floatUp {
+            to {
+                transform: translateY(-105vh);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white overflow-hidden">
+
+    <!-- Página de Entrada -->
+    <div id="landing-page" class="h-screen w-screen flex flex-col items-center justify-center relative transition-opacity duration-1000">
+        <!-- Fundo animado -->
+        <div class="animated-gradient absolute inset-0 z-0"></div>
+        <div class="bubbles">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        
+        <!-- Conteúdo -->
+        <div class="z-10 flex flex-col items-center justify-center text-center p-8 max-w-2xl">
+            <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Music Player</h1>
+            <p class="text-lg md:text-xl font-light mb-8" style="text-shadow: 0 1px 5px rgba(0,0,0,0.3)">Sua experiência musical offline a partir de vídeos do YouTube.</p>
+            
+            <!-- Card do AdGuard -->
+            <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/30 mb-4 w-full">
+                <div class="flex items-center justify-center md:justify-start space-x-4">
+                    <img src="https://avatars3.githubusercontent.com/u/8361145?s=200&v=4" alt="Ícone do AdGuard" class="w-16 h-16 rounded-lg">
+                    <div class="text-left">
+                        <h2 class="text-xl font-bold">Primeiro, baixe o AdGuard!</h2>
+                        <p class="text-sm">Para uma experiência sem anúncios, clique abaixo para instalar a extensão.</p>
+                    </div>
+                </div>
+                 <a href="https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg?pli=1" id="adguard-link" class="mt-4 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 w-full">
+                    Baixar AdGuard e Continuar
+                </a>
+            </div>
+            <button id="skip-to-player-link" class="text-white/80 hover:text-white underline transition">Pular para o player</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="adguard-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 text-center max-w-sm shadow-lg border border-white/20">
+            <h3 class="text-xl font-bold mb-4">Você instalou o AdGuard?</h3>
+            <p class="text-gray-300 mb-6">Se pular esta etapa, sua experiência musical poderá ser interrompida por propagandas.</p>
+            <div class="flex flex-col gap-3">
+                <button id="confirm-install-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full w-full">Sim, instalei e quero continuar!</button>
+                <button id="skip-button" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Pular mesmo assim</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player de Música -->
+    <div id="player-page" class="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 p-4 transition-opacity duration-1000 opacity-0 hidden">
+        <div class="w-full max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-6">Player de Música</h2>
+            <div class="flex flex-col sm:flex-row gap-2 mb-6">
+                <input type="text" id="youtube-link" placeholder="Cole o link do vídeo do YouTube aqui" class="flex-grow bg-gray-800 border-2 border-gray-700 focus:border-purple-500 focus:ring-purple-500 rounded-lg p-3 text-white transition">
+                <button id="play-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
+                    Tocar
+                </button>
+            </div>
+            <div id="player-container" class="w-full aspect-video bg-black rounded-lg shadow-2xl overflow-hidden"></div>
+            <p id="error-message" class="text-red-500 text-center mt-4 hidden">Link inválido. Por favor, insira um link válido do YouTube.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Variáveis Globais ---
+        const landingPage = document.getElementById('landing-page');
+        const playerPage = document.getElementById('player-page');
+        const adguardLink = document.getElementById('adguard-link');
+        const skipToPlayerLink = document.getElementById('skip-to-player-link');
+        const adguardModal = document.getElementById('adguard-modal');
+        const confirmInstallButton = document.getElementById('confirm-install-button');
+        const skipButton = document.getElementById('skip-button');
+        const playButton = document.getElementById('play-button');
+        const youtubeLinkInput = document.getElementById('youtube-link');
+        const playerContainer = document.getElementById('player-container');
+        const errorMessage = document.getElementById('error-message');
+        let player;
+
+        // --- Lógica de Transição de Página ---
+        function showModal() {
+            adguardModal.classList.remove('hidden');
+            setTimeout(() => adguardModal.classList.remove('opacity-0'), 10);
+        }
+
+        function goToPlayerPage() {
+            adguardModal.classList.add('opacity-0');
+            setTimeout(() => adguardModal.classList.add('hidden'), 300);
+
+            landingPage.classList.add('opacity-0');
+            setTimeout(() => {
+                landingPage.classList.add('hidden');
+                playerPage.classList.remove('hidden');
+                setTimeout(() => playerPage.classList.remove('opacity-0'), 50);
+            }, 1000);
+        }
+
+        adguardLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open(adguardLink.href, '_blank');
+            showModal();
+        });
+
+        skipToPlayerLink.addEventListener('click', showModal);
+
+        confirmInstallButton.addEventListener('click', goToPlayerPage);
+        skipButton.addEventListener('click', goToPlayerPage);
+
+        // --- Lógica do Player do YouTube ---
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() { /* Player inicializado no clique */ }
+
+        function getYouTubeVideoId(url) {
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        playButton.addEventListener('click', () => {
+            const videoId = getYouTubeVideoId(youtubeLinkInput.value);
+            if (videoId) {
+                errorMessage.classList.add('hidden');
+                if (player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    player = new YT.Player(playerContainer, {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: { 'playsinline': 1, 'autoplay': 1, 'controls': 1 },
+                        events: { 'onReady': (event) => event.target.playVideo() }
+                    });
+                }
+            } else {
+                errorMessage.classList.remove('hidden');
+                console.error("URL do YouTube inválida.");
+            }
+        });
+    </script>
+</body>
+</html>
