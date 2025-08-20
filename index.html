@@ -73,7 +73,7 @@
         
         /* Estilos da Playlist */
         .playlist-item.playing {
-            background-color: rgba(139, 92, 246, 0.3); /* Roxo translúcido */
+            background-color: rgba(139, 92, 246, 0.3);
             border-left-color: #a78bfa;
         }
     </style>
@@ -110,7 +110,7 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação -->
+    <!-- Modal de Confirmação AdGuard -->
     <div id="adguard-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden opacity-0 transition-opacity duration-300">
         <div class="bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 text-center max-w-sm shadow-lg border border-white/20">
             <h3 class="text-xl font-bold mb-4">Você instalou o AdGuard?</h3>
@@ -122,15 +122,26 @@
         </div>
     </div>
 
-    <!-- Player de Vídeo e Música -->
+    <!-- Modal de Compartilhamento -->
+    <div id="share-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-800/80 backdrop-blur-md rounded-2xl p-8 text-center max-w-md w-full shadow-lg border border-white/20">
+            <h3 class="text-xl font-bold mb-4">Compartilhar Playlist</h3>
+            <p class="text-gray-300 mb-4">Copie o código abaixo e envie para um amigo.</p>
+            <textarea id="share-code" readonly class="w-full bg-gray-900 p-2 rounded-md h-24 resize-none text-sm"></textarea>
+            <div class="flex gap-3 mt-4">
+                <button id="copy-code-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full w-full">Copiar Código</button>
+                <button id="close-share-modal" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full w-full">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Page -->
     <div id="player-page" class="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 p-4 transition-opacity duration-1000 opacity-0 hidden">
         <div class="w-full max-w-6xl mx-auto">
             <h2 class="text-3xl font-bold text-center mb-6">Video & Music Player</h2>
             <div class="flex flex-col sm:flex-row gap-2 mb-6">
                 <input type="text" id="youtube-link" placeholder="Cole o link do vídeo do YouTube aqui" class="flex-grow bg-gray-800 border-2 border-gray-700 focus:border-purple-500 focus:ring-purple-500 rounded-lg p-3 text-white transition">
-                <button id="add-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
-                    Adicionar
-                </button>
+                <button id="add-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Adicionar</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="md:col-span-2">
@@ -140,11 +151,19 @@
                         <button id="next-button" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-5 rounded-lg transition">Próximo</button>
                     </div>
                 </div>
-                <div class="md:col-span-1 bg-gray-800/50 p-4 rounded-lg">
-                    <h3 class="font-bold text-lg mb-4">Playlist</h3>
-                    <ul id="playlist-ui" class="space-y-2 h-96 overflow-y-auto">
-                        <!-- Itens da playlist serão inseridos aqui -->
-                    </ul>
+                <div class="md:col-span-1 bg-gray-800/50 p-4 rounded-lg flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg">Playlist</h3>
+                        <button id="share-playlist-button" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1 px-3 rounded-full">Compartilhar</button>
+                    </div>
+                    <ul id="playlist-ui" class="space-y-2 flex-grow overflow-y-auto h-72"></ul>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <h4 class="font-semibold text-sm mb-2">Carregar Playlist</h4>
+                        <div class="flex gap-2">
+                            <input type="text" id="import-code-input" placeholder="Cole o código aqui" class="flex-grow bg-gray-900 border border-gray-600 rounded-md p-1 text-sm">
+                            <button id="load-playlist-button" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1 px-3 rounded-md">Carregar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <p id="error-message" class="text-red-500 text-center mt-4 hidden">Link inválido. Por favor, insira um link válido do YouTube.</p>
@@ -157,9 +176,17 @@
         const playerPage = document.getElementById('player-page');
         const adguardLink = document.getElementById('adguard-link');
         const skipToPlayerLink = document.getElementById('skip-to-player-link');
+        
+        // --- Variáveis dos Modais ---
         const adguardModal = document.getElementById('adguard-modal');
         const confirmInstallButton = document.getElementById('confirm-install-button');
         const skipButton = document.getElementById('skip-button');
+        const shareModal = document.getElementById('share-modal');
+        const shareCodeText = document.getElementById('share-code');
+        const copyCodeButton = document.getElementById('copy-code-button');
+        const closeShareModalButton = document.getElementById('close-share-modal');
+
+        // --- Variáveis do Player ---
         const addButton = document.getElementById('add-button');
         const prevButton = document.getElementById('prev-button');
         const nextButton = document.getElementById('next-button');
@@ -167,22 +194,37 @@
         const playerContainer = document.getElementById('player-container');
         const playlistUI = document.getElementById('playlist-ui');
         const errorMessage = document.getElementById('error-message');
+        const sharePlaylistButton = document.getElementById('share-playlist-button');
+        const importCodeInput = document.getElementById('import-code-input');
+        const loadPlaylistButton = document.getElementById('load-playlist-button');
         
         let player;
         let playlist = [];
         let currentVideoIndex = -1;
 
-        // --- Lógica de Transição de Página e Modal ---
-        function showModal() {
-            adguardModal.classList.remove('hidden');
-            setTimeout(() => adguardModal.classList.remove('opacity-0'), 10);
+        // --- Funções de Persistência (Salvar/Carregar) ---
+        function savePlaylistToStorage() {
+            try { localStorage.setItem('youtubePlaylist', JSON.stringify(playlist)); } 
+            catch (e) { console.error("Não foi possível salvar a playlist.", e); }
         }
-        function closeModal() {
-            adguardModal.classList.add('opacity-0');
-            setTimeout(() => adguardModal.classList.add('hidden'), 300);
+        function loadPlaylistFromStorage() {
+            try {
+                const savedPlaylist = localStorage.getItem('youtubePlaylist');
+                if (savedPlaylist) playlist = JSON.parse(savedPlaylist);
+            } catch (e) { console.error("Não foi possível carregar a playlist.", e); playlist = []; }
+        }
+
+        // --- Lógica de Transição de Página e Modais ---
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
         function goToPlayerPage() {
-            closeModal();
+            closeModal(adguardModal);
             landingPage.classList.add('opacity-0');
             setTimeout(() => {
                 landingPage.classList.add('hidden');
@@ -190,11 +232,14 @@
                 setTimeout(() => playerPage.classList.remove('opacity-0'), 50);
             }, 1000);
         }
-        adguardLink.addEventListener('click', (e) => { e.preventDefault(); window.open(adguardLink.href, '_blank'); showModal(); });
-        skipToPlayerLink.addEventListener('click', showModal);
+        adguardLink.addEventListener('click', (e) => { e.preventDefault(); window.open(adguardLink.href, '_blank'); showModal(adguardModal); });
+        skipToPlayerLink.addEventListener('click', () => showModal(adguardModal));
         confirmInstallButton.addEventListener('click', goToPlayerPage);
         skipButton.addEventListener('click', goToPlayerPage);
-        adguardModal.addEventListener('click', (e) => { if (e.target === adguardModal) closeModal(); });
+        adguardModal.addEventListener('click', (e) => { if (e.target === adguardModal) closeModal(adguardModal); });
+        closeShareModalButton.addEventListener('click', () => closeModal(shareModal));
+        shareModal.addEventListener('click', (e) => { if (e.target === shareModal) closeModal(shareModal); });
+
 
         // --- Lógica do Player do YouTube ---
         const tag = document.createElement('script');
@@ -206,62 +251,41 @@
             player = new YT.Player(playerContainer, {
                 height: '100%', width: '100%',
                 playerVars: { 'playsinline': 1, 'controls': 1 },
-                events: { 'onStateChange': onPlayerStateChange }
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
-
-        function onPlayerStateChange(event) {
-            // Quando o vídeo começa a tocar, pega o título
-            if (event.data == YT.PlayerState.PLAYING) {
-                if (currentVideoIndex > -1 && playlist[currentVideoIndex]) {
-                    const videoData = player.getVideoData();
-                    playlist[currentVideoIndex].title = videoData.title;
-                    renderPlaylist(); // Re-renderiza para mostrar o título
-                }
-            }
-            // Quando o vídeo termina, toca o próximo
-            if (event.data == YT.PlayerState.ENDED) {
-                playNext();
+        function onPlayerReady(event) {
+            if (playlist.length > 0) {
+                currentVideoIndex = 0;
+                player.cueVideoById(playlist[currentVideoIndex].id);
+                renderPlaylist();
             }
         }
-
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING && currentVideoIndex > -1 && playlist[currentVideoIndex] && !playlist[currentVideoIndex].title) {
+                playlist[currentVideoIndex].title = player.getVideoData().title;
+                savePlaylistToStorage();
+                renderPlaylist();
+            }
+            if (event.data == YT.PlayerState.ENDED) playNext();
+        }
         function getYouTubeVideoId(url) {
             const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
+            return url.match(regex) ? url.match(regex)[1] : null;
         }
-
         function renderPlaylist() {
-            playlistUI.innerHTML = '';
-            if (playlist.length === 0) {
-                playlistUI.innerHTML = '<li class="text-gray-500">Sua playlist está vazia.</li>';
-            }
+            playlistUI.innerHTML = playlist.length === 0 ? '<li class="text-gray-500">Sua playlist está vazia.</li>' : '';
             playlist.forEach((video, index) => {
                 const li = document.createElement('li');
                 li.className = `playlist-item flex justify-between items-center p-2 rounded-md cursor-pointer border-l-4 border-transparent hover:bg-purple-500/20 transition-all duration-200 ${index === currentVideoIndex ? 'playing' : ''}`;
                 li.dataset.index = index;
-                
-                const videoTitle = document.createElement('span');
-                // Usa o título se já tiver, senão usa um placeholder
-                const titleText = video.title ? video.title : `Carregando título...`;
-                videoTitle.textContent = `Vídeo ${index + 1}: ${titleText}`;
-                videoTitle.className = 'truncate pr-2'; // Adiciona truncate para cortar texto longo
-                li.appendChild(videoTitle);
-
-                const removeBtn = document.createElement('button');
-                removeBtn.textContent = '✕';
-                removeBtn.className = 'ml-2 text-gray-400 hover:text-white flex-shrink-0';
-                removeBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    removeSong(index);
-                };
-                li.appendChild(removeBtn);
-
+                const titleText = video.title ? video.title : `Vídeo adicionado`;
+                li.innerHTML = `<span class="truncate pr-2">Vídeo ${index + 1}: ${titleText}</span><button class="ml-2 text-gray-400 hover:text-white flex-shrink-0">✕</button>`;
+                li.querySelector('button').onclick = (e) => { e.stopPropagation(); removeSong(index); };
                 li.onclick = () => playSong(index);
                 playlistUI.appendChild(li);
             });
         }
-
         function playSong(index) {
             if (index >= 0 && index < playlist.length) {
                 currentVideoIndex = index;
@@ -269,28 +293,14 @@
                 renderPlaylist();
             }
         }
-
-        function playNext() {
-            if (playlist.length > 0) {
-                const nextIndex = (currentVideoIndex + 1) % playlist.length;
-                playSong(nextIndex);
-            }
-        }
-
-        function playPrev() {
-            if (playlist.length > 0) {
-                const prevIndex = (currentVideoIndex - 1 + playlist.length) % playlist.length;
-                playSong(prevIndex);
-            }
-        }
-        
+        function playNext() { if (playlist.length > 0) playSong((currentVideoIndex + 1) % playlist.length); }
+        function playPrev() { if (playlist.length > 0) playSong((currentVideoIndex - 1 + playlist.length) % playlist.length); }
         function removeSong(index) {
             playlist.splice(index, 1);
+            savePlaylistToStorage();
             if (playlist.length === 0) {
                 currentVideoIndex = -1;
-                player.stopVideo();
-                // Limpa o player, mas não o destrói
-                player.loadVideoById('');
+                player.stopVideo(); player.loadVideoById('');
             } else if (index === currentVideoIndex) {
                 currentVideoIndex = index % playlist.length;
                 playSong(currentVideoIndex);
@@ -299,27 +309,68 @@
             }
             renderPlaylist();
         }
-
         addButton.addEventListener('click', () => {
             const videoId = getYouTubeVideoId(youtubeLinkInput.value);
             if (videoId) {
                 errorMessage.classList.add('hidden');
-                // Adiciona com um título provisório
                 playlist.push({ id: videoId, title: null });
+                savePlaylistToStorage();
                 youtubeLinkInput.value = '';
                 renderPlaylist();
-                if (currentVideoIndex === -1) {
-                    playSong(0);
-                }
+                if (currentVideoIndex === -1) playSong(0);
             } else {
                 errorMessage.classList.remove('hidden');
             }
         });
-        
         nextButton.addEventListener('click', playNext);
         prevButton.addEventListener('click', playPrev);
 
-        // Renderiza a playlist vazia inicialmente
+        // --- Lógica de Compartilhamento ---
+        sharePlaylistButton.addEventListener('click', () => {
+            if (playlist.length === 0) {
+                alert("Sua playlist está vazia. Adicione vídeos para compartilhar.");
+                return;
+            }
+            const jsonString = JSON.stringify(playlist);
+            const base64Code = btoa(jsonString); // Converte para Base64
+            shareCodeText.value = base64Code;
+            showModal(shareModal);
+        });
+
+        copyCodeButton.addEventListener('click', () => {
+            shareCodeText.select();
+            document.execCommand('copy');
+            copyCodeButton.textContent = 'Copiado!';
+            setTimeout(() => { copyCodeButton.textContent = 'Copiar Código'; }, 2000);
+        });
+
+        loadPlaylistButton.addEventListener('click', () => {
+            const code = importCodeInput.value.trim();
+            if (!code) return;
+
+            try {
+                const jsonString = atob(code); // Decodifica de Base64
+                const newPlaylist = JSON.parse(jsonString);
+                
+                if (Array.isArray(newPlaylist)) {
+                    playlist = newPlaylist;
+                    savePlaylistToStorage();
+                    renderPlaylist();
+                    importCodeInput.value = '';
+                    if (playlist.length > 0) {
+                        playSong(0);
+                    }
+                } else {
+                    throw new Error("Código inválido.");
+                }
+            } catch (error) {
+                console.error("Erro ao carregar playlist:", error);
+                alert("O código da playlist é inválido ou está corrompido.");
+            }
+        });
+
+        // --- Inicialização ---
+        loadPlaylistFromStorage();
         renderPlaylist();
     </script>
 </body>
