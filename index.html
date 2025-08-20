@@ -74,6 +74,25 @@
                 opacity: 0;
             }
         }
+
+        /* Efeito de borda neon */
+        .neon-border-wrapper {
+            position: relative;
+        }
+        .neon-border-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            z-index: -1;
+            filter: blur(15px);
+            animation: gradient 15s ease infinite, pulse-glow 4s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white overflow-hidden">
@@ -89,8 +108,8 @@
         
         <!-- Conteúdo -->
         <div class="z-10 flex flex-col items-center justify-center text-center max-w-2xl w-full p-4">
-            <!-- Wrapper para a borda animada -->
-            <div class="animated-gradient p-[3px] shadow-2xl">
+            <!-- Wrapper para a borda animada e o brilho neon -->
+            <div class="animated-gradient p-[3px] shadow-2xl neon-border-wrapper">
                 <!-- Container retangular para o conteúdo -->
                 <div class="bg-black/25 backdrop-blur-md p-8 md:p-10 w-full">
                     <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Music Player</h1>
@@ -157,16 +176,19 @@
         const errorMessage = document.getElementById('error-message');
         let player;
 
-        // --- Lógica de Transição de Página ---
+        // --- Lógica de Transição de Página e Modal ---
         function showModal() {
             adguardModal.classList.remove('hidden');
             setTimeout(() => adguardModal.classList.remove('opacity-0'), 10);
         }
 
-        function goToPlayerPage() {
+        function closeModal() {
             adguardModal.classList.add('opacity-0');
             setTimeout(() => adguardModal.classList.add('hidden'), 300);
+        }
 
+        function goToPlayerPage() {
+            closeModal();
             landingPage.classList.add('opacity-0');
             setTimeout(() => {
                 landingPage.classList.add('hidden');
@@ -185,6 +207,13 @@
 
         confirmInstallButton.addEventListener('click', goToPlayerPage);
         skipButton.addEventListener('click', goToPlayerPage);
+
+        // Adiciona evento para fechar o modal ao clicar fora
+        adguardModal.addEventListener('click', (e) => {
+            if (e.target === adguardModal) {
+                closeModal();
+            }
+        });
 
         // --- Lógica do Player do YouTube ---
         const tag = document.createElement('script');
