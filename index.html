@@ -22,7 +22,7 @@
             100% { background-position: 0% 50%; }
         }
         
-        /* Efeito de texto com gradiente animado e sombra para contraste */
+        /* Efeito de texto com gradiente animado */
         .animated-text {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
@@ -30,8 +30,6 @@
             background-clip: text;
             color: transparent;
             animation: gradient 15s ease infinite;
-            /* Adicionado para dar contraste com o fundo */
-            text-shadow: 0px 2px 15px rgba(0, 0, 0, 0.5);
         }
 
         /* Efeito de vidro fosco */
@@ -90,24 +88,27 @@
         </div>
         
         <!-- Conteúdo -->
-        <div class="z-10 flex flex-col items-center justify-center text-center p-8 max-w-2xl">
-            <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Music Player</h1>
-            <p class="text-lg md:text-xl font-light mb-8" style="text-shadow: 0 1px 5px rgba(0,0,0,0.3)">Sua experiência musical offline a partir de vídeos do YouTube.</p>
-            
-            <!-- Card do AdGuard -->
-            <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/30 mb-4 w-full">
-                <div class="flex items-center justify-center md:justify-start space-x-4">
-                    <img src="https://avatars3.githubusercontent.com/u/8361145?s=200&v=4" alt="Ícone do AdGuard" class="w-16 h-16 rounded-lg">
-                    <div class="text-left">
-                        <h2 class="text-xl font-bold">Primeiro, baixe o AdGuard!</h2>
-                        <p class="text-sm">Para uma experiência sem anúncios, clique abaixo para instalar a extensão.</p>
+        <div class="z-10 flex flex-col items-center justify-center text-center max-w-2xl w-full p-4">
+            <!-- Container retangular para o conteúdo -->
+            <div class="bg-black/25 backdrop-blur-md p-8 md:p-10 shadow-2xl w-full">
+                <h1 class="text-5xl md:text-7xl font-black uppercase tracking-wider mb-4 animated-text">Music Player</h1>
+                <p class="text-lg md:text-xl font-light mb-8">Sua experiência musical offline a partir de vídeos do YouTube.</p>
+                
+                <!-- Card do AdGuard -->
+                <div class="bg-white/20 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/30 mb-4 w-full">
+                    <div class="flex items-center justify-center md:justify-start space-x-4">
+                        <img src="https://avatars3.githubusercontent.com/u/8361145?s=200&v=4" alt="Ícone do AdGuard" class="w-16 h-16 rounded-lg">
+                        <div class="text-left">
+                            <h2 class="text-xl font-bold">Primeiro, baixe o AdGuard!</h2>
+                            <p class="text-sm">Para uma experiência sem anúncios, clique abaixo para instalar a extensão.</p>
+                        </div>
                     </div>
+                     <a href="https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg?pli=1" id="adguard-link" class="mt-4 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 w-full">
+                        Baixar AdGuard e Continuar
+                    </a>
                 </div>
-                 <a href="https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg?pli=1" id="adguard-link" class="mt-4 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 w-full">
-                    Baixar AdGuard e Continuar
-                </a>
+                <button id="skip-to-player-link" class="text-white/80 hover:text-white underline transition">Pular para o player</button>
             </div>
-            <button id="skip-to-player-link" class="text-white/80 hover:text-white underline transition">Pular para o player</button>
         </div>
     </div>
 
